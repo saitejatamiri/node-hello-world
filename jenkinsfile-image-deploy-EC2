@@ -1,0 +1,24 @@
+pipeline {
+    agent any
+    environment {
+        EC2_USER = 'ubuntu'  // Change to 'ubuntu' if using Ubuntu
+        EC2_HOST = '52.62.98.118'
+        DOCKER_IMAGE = 'saitejatamiri/123:tag123'
+        CONTAINER_NAME = 'Demo'
+    }
+    stages {
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ssh']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST <<EOF
+                        sudo docker pull $DOCKER_IMAGE
+                        sudo docker stop $CONTAINER_NAME || true
+                        sudo docker rm $CONTAINER_NAME || true
+                        sudo docker run -d --name $CONTAINER_NAME -p 3000:3000 $DOCKER_IMAGE
+                    """
+                }
+            }
+        }
+    }
+}
